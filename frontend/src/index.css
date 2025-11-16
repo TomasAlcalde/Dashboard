@@ -1,0 +1,31 @@
+@import url("https://fonts.googleapis.com/css2?family=Lato:wght@400;500;600;700&display=swap");
+@import "tailwindcss";
+
+@theme {
+  --color-primary-superlight: #eb8bed;
+  --color-primary-light: #d957dc;
+  --color-primary: #AA21AF;
+  --color-primary-dark: #6f0f73;
+  --color-secondary-light: #4a4994;
+  --color-secondary: #1F1E65;
+  --color-secondary-dark: #131241;
+}
+
+:root {
+  font-family: "Lato", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+    sans-serif;
+  color: #0f172a;
+  background-color: #f8fafc;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  font-family: "Lato", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+    sans-serif;
+  background: #f8fafc;
+}
+
+#root {
+  min-height: 100vh;
+}
