@@ -6,7 +6,7 @@ El proyecto es un monorepo con dos paquetes principales:
 - **backend/**: API REST en FastAPI para ingestión de clientes, clasificación vía LLM y exposición de métricas agregadas.
 - **frontend/**: SPA en React/Vite que consume la API y presenta dashboards analíticos y herramientas operativas para el equipo comercial.
 
-La comunicación se hace mediante JSON sobre HTTP. React Query maneja cache y estados de petición, mientras que FastAPI y SQLAlchemy exponen los datos persistidos en SQLite.
+La comunicación se hace mediante JSON sobre HTTP. React Query maneja cache y estados de petición, mientras que FastAPI y SQLAlchemy exponen los datos persistidos en SQLite (local) o Postgres (en despliegue).
 
 ## Backend
 ### Capas
@@ -21,7 +21,7 @@ La comunicación se hace mediante JSON sobre HTTP. React Query maneja cache y es
 `llm_classifier.py` construye un prompt contextualizado (histórico de pains y objections) y valida la respuesta usando `ClassificationBase`. Se implementaron reintentos y detección de rate limiting para Gemini.
 
 ### Decisiones clave
-- **SQLite + SQLAlchemy** simplifica el despliegue serverless (archivo único) y permite migrar a Postgres sin cambios radicales.
+- **SQLAlchemy** permite trabajar con SQLite para DX local y con Postgres gestionado en Vercel (Neon/Supabase) sin cambios drásticos en el ORM.
 - **Servicios especializados** facilitan pruebas unitarias y evitan lógica en controladores.
 - **Endp. de métricas específicos** (`/metrics/origins`, `/metrics/automatization-outcomes`, etc.) reducen la carga del frontend y estandarizan respuestas.
 

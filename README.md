@@ -1,12 +1,12 @@
 # Categorizacion Automatica y Visualizacion de Metricas de Clientes
 
-Monorepo que unifica un backend de clasificacion basado en FastAPI + SQLite y un frontend en React/Vite orientado a dashboards con KPIs en tiempo real. El objetivo es ingestarlos registros de clientes, clasificarlos automaticamente mediante un pipeline LLM y exponer visualizaciones que permitan priorizar oportunidades comerciales.
+Monorepo que unifica un backend de clasificacion basado en FastAPI + SQLAlchemy (SQLite local y Postgres gestionado en despliegue) y un frontend en React/Vite orientado a dashboards con KPIs en tiempo real. El objetivo es ingestarlos registros de clientes, clasificarlos automaticamente mediante un pipeline LLM y exponer visualizaciones que permitan priorizar oportunidades comerciales.
 
 ## Stack Tecnico
 
 - **Frontend**: React 18, Vite, TypeScript, Material UI, TailwindCSS, Recharts, React Router, React Query, Zustand.
-- **Backend**: FastAPI, SQLAlchemy, SQLite, Pydantic, pytest.
-- **Infraestructura**: Vercel (frontend static hosting + backend serverless Python), CORS configurable via `FRONTEND_ORIGIN`.
+- **Backend**: FastAPI, SQLAlchemy (SQLite para desarrollo / Postgres en producción), Pydantic, pytest.
+- **Infraestructura**: Vercel (frontend static hosting + backend serverless Python), CORS configurable via `FRONTEND_ORIGIN`. Se requiere un Postgres gestionado (Neon, Supabase, Railway) porque Vercel no soporta archivos SQLite.
 
 ## Instalacion
 
@@ -57,6 +57,18 @@ El frontend expone dos vistas principales:
 - **Clients**: DataGrid con filtros (fecha, seller) y chips de estado. Al seleccionar un registro se abre un drawer lateral con la clasificación completa (sentiment, urgency, fit score, close probability, origen, automatización, riesgos, dolores) y el transcript asociado.
 
 Estas vistas consumen los endpoints `/api/metrics/*` y `/api/clients` a traves de React Query, actualizando los componentes creados (`KpiCards`, `MonthlyConversionTrend`, `UseCaseDistribution`, `SellerConversionList`, `PainDistribution`, `AutomatizationOutcomeChart`, `OriginDistributionList`).
+
+## Despliegue en Vercel sin SQLite
+
+Vercel no permite escribir archivos SQLite en runtime. El backend ahora detecta la variable `DATABASE_URL` y, si está presente, abre un engine SQLAlchemy hacia Postgres (driver `psycopg`). Flujo sugerido:
+
+1. Crea una base de datos gestionada (Neon `serverless`, Supabase, Railway, etc.) y copia su cadena `postgresql://`.
+2. Configura `DATABASE_URL` en `backend/.env` para reproducir el escenario en local y ejecutar `api-dev` (se crearán las tablas automáticamente al iniciar la API).
+3. En el dashboard de Vercel agrega la misma variable para tu proyecto tanto en `Development` como en `Production`.
+4. Despliega el backend (`vercel --prod` o git push). En el primer cold start SQLAlchemy ejecutará `Base.metadata.create_all` sobre Postgres.
+5. Usa el endpoint `/api/ingest/csv` apuntando al CSV de `data/` para poblar las tablas, o conecta tu pipeline ETL habitual.
+
+Mientras `DATABASE_URL` no esté definido, el backend mantiene el comportamiento previo y crea `data/vambe.db` en local, por lo que la DX no cambia.
 
 ## Documentación
 

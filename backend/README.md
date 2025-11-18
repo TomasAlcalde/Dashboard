@@ -14,6 +14,7 @@ api-dev  # levanta uvicorn en localhost:8000
 - `APP_SECRET`: usado para firmar o validar metadatos.
 - `GOOGLE_API_KEY`: clave para llamar al modelo Gemini y generar las clasificaciones automáticas.
 - `FRONTEND_ORIGIN`: dominio permitido para CORS (por defecto `http://localhost:5173`).
+- `DATABASE_URL`: cadena completa de Postgres (por ejemplo `postgresql+psycopg://user:pass@host/db`). Si se omite, el backend crea `data/vambe.db` con SQLite para desarrollo local.
 
 ## API principal
 
@@ -34,11 +35,14 @@ api-dev  # levanta uvicorn en localhost:8000
 | GET | `/api/metrics/sentiment-conversion` | Comparativa de sentiment vs casos cerrados/no cerrados. |
 | GET | `/api/metrics/automatization-outcomes` | Cruce entre automatización requerida y estado del caso. |
 
-### Pipeline CSV -> SQLite
+### Pipeline CSV -> Base de datos
 1. Lee el archivo CSV (usa `data/vambe_clients.csv` como plantilla).
 2. Limpia y normaliza los datos (booleanos, fechas, transcripts).
 3. Invoca el LLM (`services.llm_classifier`) para obtener sentimiento, urgencia, origen, automatización, dolores, riesgos, fit score y probabilidad de cierre.
-4. Inserta/actualiza clientes en SQLite y almacena la clasificacion en la tabla `classifications`.
+4. Inserta/actualiza clientes en la base de datos configurada (SQLite local o Postgres gestionado) y almacena la clasificacion en la tabla `classifications`.
+
+### Postgres en Vercel
+Como Vercel no puede escribir archivos SQLite, define `DATABASE_URL` apuntando a un Postgres gestionado (Neon, Supabase, Railway). Al iniciar la función serverless, `Base.metadata.create_all` generará las tablas automáticamente. Para poblar datos tras el despliegue, vuelve a ejecutar `/api/ingest/csv` o tu pipeline de clasificación.
 
 ## Tests
 

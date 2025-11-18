@@ -9,6 +9,7 @@ class Settings(BaseSettings):
     app_secret: str = "change-me"
     google_api_key: str | None = None
     frontend_origin: str | None = "http://localhost:5173"
+    database_url: str | None = None
 
     model_config = SettingsConfigDict(env_file=ENV_FILE, env_file_encoding="utf-8", extra="ignore")
 
