@@ -25,10 +25,10 @@ class Classification(Base):
     use_case: Mapped[str | None] = mapped_column(String(120), nullable=True)
     pains: Mapped[list[str] | None] = mapped_column(JSON, nullable=True)
     objections: Mapped[list[str] | None] = mapped_column(JSON, nullable=True)
-    competitors: Mapped[list[str] | None] = mapped_column(JSON, nullable=True)
     risks: Mapped[list[str] | None] = mapped_column(JSON, nullable=True)
     next_step_clarity: Mapped[int | None] = mapped_column(Integer, nullable=True)
     fit_score: Mapped[float] = mapped_column(Float, nullable=False, default=0.0)
     close_probability: Mapped[float] = mapped_column(Float, nullable=False, default=0.0)
+    summary: Mapped[str] = mapped_column(String(120), nullable=False)
 
     transcript: Mapped["Transcript"] = relationship("Transcript", back_populates="classification")

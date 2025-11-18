@@ -53,10 +53,7 @@ const Header = ({ onMenuClick }: HeaderProps) => {
           </Box>
           <Box sx={{ display: { xs: "none", sm: "block" } }}>
             <Typography variant="h6" fontWeight={600}>
-              Revenue Intelligence
-            </Typography>
-            <Typography variant="body2" color="text.secondary">
-              Deal overview
+              Analytics de los transcritos
             </Typography>
           </Box>
         </Box>

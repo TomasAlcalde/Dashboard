@@ -11,12 +11,11 @@ class ClassificationBase(BaseModel):
     use_case: str | None = Field(default=None)
     pains: list[str] | None = Field(default_factory=list)
     objections: list[str] | None = Field(default_factory=list)
-    competitors: list[str] | None = Field(default_factory=list)
     risks: list[str] | None = Field(default_factory=list)
     next_step_clarity: int = Field(ge=0, le=3)
     fit_score: float = Field(ge=0, le=1)
     close_probability: float = Field(ge=0, le=1)
-
+    summary: str = Field(default="")
 
 class ClassificationCreate(ClassificationBase):
     transcript_id: int

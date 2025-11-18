@@ -1,285 +1,189 @@
-import { useMemo, useState } from "react";
+import { useState } from "react";
 
-import {
-  Box,
-  Chip,
-  Divider,
-  Drawer,
-  FormControl,
-  InputLabel,
-  MenuItem,
-  Paper,
-  Select,
-  Stack,
-  Typography,
-} from "@mui/material";
-import { DataGrid, GridColDef } from "@mui/x-data-grid";
+import AddSharpIcon from "@mui/icons-material/AddSharp";
+import { Alert, Box, Button, Paper, Snackbar, Stack, Typography } from "@mui/material";
 
+import ClientsFilters, {
+  FilterField,
+  FilterOption,
+} from "../components/clients/ClientsFilters";
+import CsvIngestDialog from "../components/clients/CsvIngestDialog";
+import ClientsTable from "../components/clients/ClientsTable";
+import ClientDetailsDrawer from "../components/clients/ClientDetailsDrawer";
 import { useClients } from "../api/clients";
-import type { ClientRecord, TranscriptRecord } from "../api/clients";
+import type { ClientRecord } from "../api/clients";
 import { useFilterStore } from "../store/filterStore";
+import type { FilterSlice } from "../store/filterStore";
+import type { CSVIngestResponse } from "../api/ingest";
 
-const sellerOptions = ["all", "Sara", "Juan", "Andrea"];
-const segmentOptions = ["all", "Enterprise", "Mid Market", "SMB"];
-
-const getLatestTranscript = (record: ClientRecord): TranscriptRecord | null => {
-  const list = record.transcripts ?? [];
-  if (!list.length) {
-    return null;
-  }
-  const sorted = [...list].sort((a, b) => {
-    const timeA = a.meeting_date ? new Date(a.meeting_date).getTime() : 0;
-    const timeB = b.meeting_date ? new Date(b.meeting_date).getTime() : 0;
-    return timeA - timeB;
-  });
-  return sorted[sorted.length - 1];
-};
+const dateRangeOptions: FilterOption[] = [
+  { value: "all", label: "Todos" },
+  { value: "7d", label: "7 dias" },
+  { value: "30d", label: "30 dias" },
+  { value: "90d", label: "90 dias" },
+];
 
 const ClientsPage = () => {
-  const { dateRange, seller, segment, setDateRange, setSeller, setSegment } =
-    useFilterStore();
-  const { data, isLoading } = useClients({ dateRange, seller, segment });
-  const [selected, setSelected] = useState<ClientRecord | null>(null);
+  const { dateRange, seller, setDateRange, setSeller } = useFilterStore();
+  const { data, isLoading, refetch } = useClients({
+    dateRange,
+    seller,
+  });
+  const [selectedClient, setSelectedClient] = useState<ClientRecord | null>(
+    null
+  );
+  const [feedback, setFeedback] = useState<FeedbackState | null>(null);
+  const [isUploadDialogOpen, setIsUploadDialogOpen] = useState(false);
 
   const rows = data?.items ?? [];
+  const sellerOptions = buildSellerOptions(rows);
 
-  const columns = useMemo<GridColDef<ClientRecord>[]>(
-    () => [
-      {
-        field: "name",
-        headerName: "Cliente",
-        flex: 1,
-        minWidth: 180,
-      },
+  const filters: FilterField[] = [
+    {
+      id: "dateRange",
+      label: "Periodo",
+      value: dateRange,
+      options: dateRangeOptions,
+      onChange: (value) => setDateRange(value as FilterSlice["dateRange"]),
+    },
+    {
+      id: "seller",
+      label: "Seller",
+      value: seller,
+      options: sellerOptions,
+      onChange: (value) => setSeller(value),
+    },
+  ];
 
-      {
-        field: "assigned_seller",
-        headerName: "Seller",
-        flex: 1,
-        minWidth: 140,
-      },
+  const handleUploadSuccess = (response: CSVIngestResponse) => {
+    setFeedback({
+      severity: "success",
+      message: `CSV procesado: ${response.processed_rows} filas.`,
+    });
+    void refetch();
+  };
 
-      {
-        field: "meeting_date",
-        headerName: "Reunión",
-        flex: 1,
-        minWidth: 160,
-      },
+  const handleUploadError = (message: string) => {
+    setFeedback({ severity: "error", message });
+  };
 
-      {
-        field: "closed",
-        headerName: "Estado",
-        flex: 0.5,
-        minWidth: 120,
-        renderCell: (data) => {
-          if (data.value) {
-            return <Chip label="Closed Won" color="success" />;
-          }
-          return <Chip label="Open" color="warning" />;
-        },
-      },
+  const handleFeedbackClose = () => {
+    setFeedback(null);
+  };
 
-      {
-        field: "fit_score",
-        headerName: "Fit Score",
-        flex: 0.5,
-        minWidth: 120,
-      },
-
-      {
-        field: "close_probability",
-        headerName: "Prob. Cierre",
-        flex: 0.7,
-        minWidth: 150,
-      },
-    ],
-    []
-  );
+  const handleDialogOpen = () => setIsUploadDialogOpen(true);
+  const handleDialogClose = () => setIsUploadDialogOpen(false);
 
   return (
     <Stack spacing={3}>
-      <Paper sx={{ p: 2, borderRadius: 3 }}>
-        <Typography variant="h4" fontWeight={600}>
-          Clients
-        </Typography>
-        <Typography variant="body1" className="text-grey pb-5">
-          Gestiona el pipeline y revisa la clasificacion automatica.
-        </Typography>
-        <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
-          <FormControl size="small" sx={{ minWidth: 160 }}>
-            <InputLabel>Periodo</InputLabel>
-            <Select
-              label="Periodo"
-              value={dateRange}
-              onChange={(event) =>
-                setDateRange(event.target.value as typeof dateRange)
-              }
+      <Paper
+        sx={{
+          p: { xs: 2, md: 3 },
+          borderRadius: 3,
+          boxShadow: "0 18px 40px rgba(58, 53, 65, 0.12)",
+        }}
+      >
+        <Stack spacing={3}>
+          <Stack
+            direction={{ xs: "column", md: "row" }}
+            spacing={2}
+            alignItems={{ xs: "flex-start", md: "center" }}
+            justifyContent="space-between"
+          >
+            <Stack spacing={0.5}>
+              <Typography variant="h4" fontWeight={600}>
+                Clientes
+              </Typography>
+            </Stack>
+            <Stack
+              direction="row"
+              spacing={2}
+              alignItems="center"
+              justifyContent="flex-end"
+              flexWrap="nowrap"
+              sx={{ width: "100%", maxWidth: { xs: "100%", md: "auto" }, overflowX: "auto" }}
             >
-              <MenuItem value="7d">7 dias</MenuItem>
-              <MenuItem value="30d">30 dias</MenuItem>
-              <MenuItem value="90d">90 dias</MenuItem>
-            </Select>
-          </FormControl>
-          <FormControl size="small" sx={{ minWidth: 160 }}>
-            <InputLabel>Seller</InputLabel>
-            <Select
-              label="Seller"
-              value={seller}
-              onChange={(event) => setSeller(event.target.value)}
-            >
-              {sellerOptions.map((option) => (
-                <MenuItem key={option} value={option}>
-                  {option === "all" ? "Todos" : option}
-                </MenuItem>
-              ))}
-            </Select>
-          </FormControl>
-          <FormControl size="small" sx={{ minWidth: 160 }}>
-            <InputLabel>Segmento</InputLabel>
-            <Select
-              label="Segmento"
-              value={segment}
-              onChange={(event) => setSegment(event.target.value)}
-            >
-              {segmentOptions.map((option) => (
-                <MenuItem key={option} value={option}>
-                  {option === "all" ? "Todos" : option}
-                </MenuItem>
-              ))}
-            </Select>
-          </FormControl>
+              <ClientsFilters filters={filters} />
+              <Button
+                variant="contained"
+                onClick={handleDialogOpen}
+                aria-label="Agregar clientes"
+                sx={{
+                  minWidth: 48,
+                  width: 48,
+                  height: 48,
+                  p: 0,
+                  borderRadius: 2,
+                }}
+              >
+                <AddSharpIcon fontSize="small" />
+              </Button>
+            </Stack>
+          </Stack>
+          <Box sx={{ borderTop: "1px solid", borderColor: "divider", pt: 3 }}>
+            <ClientsTable
+              rows={rows}
+              loading={isLoading}
+              onSelect={setSelectedClient}
+            />
+          </Box>
         </Stack>
       </Paper>
 
-      <Paper sx={{ p: 2, borderRadius: 3 }}>
-        <div style={{ height: 520, width: "100%", overflow: "hidden" }}>
-          <DataGrid
-            rows={rows}
-            columns={columns}
-            getRowId={(row) => row.id}
-            disableRowSelectionOnClick
-            loading={isLoading}
-            onRowClick={(params) => setSelected(params.row)}
-            sx={{
-              border: "none",
-              "& .MuiDataGrid-columnHeaders": {
-                backgroundColor: "rgba(15,23,42,0.04)",
-              },
-            }}
-          />
-        </div>
-      </Paper>
-
-      <Drawer
-        anchor="right"
-        open={Boolean(selected)}
-        onClose={() => setSelected(null)}
+      <ClientDetailsDrawer
+        client={selectedClient}
+        onClose={() => setSelectedClient(null)}
+      />
+      <CsvIngestDialog
+        open={isUploadDialogOpen}
+        onClose={handleDialogClose}
+        onSuccess={handleUploadSuccess}
+        onError={handleUploadError}
+      />
+      <Snackbar
+        open={Boolean(feedback)}
+        autoHideDuration={4000}
+        onClose={handleFeedbackClose}
+        anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
       >
-        {selected && (
-          <Box sx={{ width: { xs: 320, md: 420 }, p: 3 }}>
-            {(() => {
-              const latestTranscript = getLatestTranscript(selected);
-              return (
-                <Stack spacing={2}>
-                  <Typography variant="h6" fontWeight={600}>
-                    {selected.name}
-                  </Typography>
-                  {latestTranscript ? (
-                    <Stack direction="row" spacing={1} alignItems="center">
-                      <Chip
-                        label={latestTranscript.closed ? "Closed" : "Open"}
-                        color={latestTranscript.closed ? "success" : "warning"}
-                        size="small"
-                      />
-                      {latestTranscript.assigned_seller ? (
-                        <Chip
-                          label={latestTranscript.assigned_seller}
-                          size="small"
-                          variant="outlined"
-                        />
-                      ) : null}
-                    </Stack>
-                  ) : null}
-                  <Divider />
-                  <Typography variant="subtitle2" color="text.secondary">
-                    Clasificacion
-                  </Typography>
-                  {latestTranscript?.classification ? (
-                    <Stack spacing={1}>
-                      <InfoRow
-                        label="Sentiment"
-                        value={latestTranscript.classification.sentiment}
-                      />
-                      <InfoRow
-                        label="Urgency"
-                        value={latestTranscript.classification.urgency}
-                      />
-                      <InfoRow
-                        label="Use case"
-                        value={latestTranscript.classification.use_case}
-                      />
-                      <InfoRow
-                        label="Fit score"
-                        value={`${
-                          latestTranscript.classification.fit_score * 100
-                        }%`}
-                      />
-                      <InfoRow
-                        label="Prob. cierre"
-                        value={`${
-                          latestTranscript.classification.close_probability *
-                          100
-                        }%`}
-                      />
-                      {latestTranscript.classification.objections ? (
-                        <InfoRow
-                          label="Objeciones"
-                          value={latestTranscript.classification.objections}
-                        />
-                      ) : null}
-                      {latestTranscript.classification.competitors ? (
-                        <InfoRow
-                          label="Competidores"
-                          value={latestTranscript.classification.competitors}
-                        />
-                      ) : null}
-                    </Stack>
-                  ) : (
-                    <Typography variant="body2">
-                      Sin clasificacion cargada aun.
-                    </Typography>
-                  )}
-                  <Divider />
-                  <Typography variant="subtitle2" color="text.secondary">
-                    Transcript
-                  </Typography>
-                  <Typography variant="body2" color="text.primary">
-                    {latestTranscript?.transcript ?? "Sin transcript."}
-                  </Typography>
-                </Stack>
-              );
-            })()}
-          </Box>
-        )}
-      </Drawer>
+        {feedback ? (
+          <Alert
+            onClose={handleFeedbackClose}
+            severity={feedback.severity}
+            sx={{ width: "100%" }}
+          >
+            {feedback.message}
+          </Alert>
+        ) : undefined}
+      </Snackbar>
     </Stack>
   );
 };
 
-type InfoRowProps = {
-  label: string;
-  value: string;
+type FeedbackState = {
+  message: string;
+  severity: "success" | "error";
 };
 
-const InfoRow = ({ label, value }: InfoRowProps) => (
-  <Stack direction="row" justifyContent="space-between">
-    <Typography variant="body2" color="text.secondary">
-      {label}
-    </Typography>
-    <Typography variant="body2" fontWeight={600}>
-      {value}
-    </Typography>
-  </Stack>
-);
+const buildSellerOptions = (clients: ClientRecord[]): FilterOption[] => {
+  const sellers = new Set<string>();
+
+  clients.forEach((client) => {
+    client.transcripts?.forEach((transcript) => {
+      if (transcript.assigned_seller) {
+        sellers.add(transcript.assigned_seller);
+      }
+    });
+  });
+
+  const sorted = Array.from(sellers).sort((a, b) =>
+    a.localeCompare(b, "es", { sensitivity: "base" })
+  );
+
+  return [
+    { value: "all", label: "Todos" },
+    ...sorted.map((name) => ({ value: name, label: name })),
+  ];
+};
 
 export default ClientsPage;

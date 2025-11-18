@@ -1,8 +1,9 @@
 README.md
 pyproject.toml
 api/__init__.py
-api/main copy.py
+api/check_env.py
 api/main.py
+api/settings.py
 api/models/__init__.py
 api/models/classification.py
 api/models/client.py
@@ -28,6 +29,7 @@ api/services/__init__.py
 api/services/classify.py
 api/services/clients.py
 api/services/dashboard.py
+api/services/genai_client.py
 api/services/llm_classifier.py
 api/services/metrics.py
 api/services/pipeline.py

@@ -33,8 +33,7 @@ for router in api_routers:
 
 @app.get("/", tags=["health"])
 async def root() -> dict[str, str]:
-    digest = settings.app_secret[:4] + "***" if settings.app_secret else "***"
-    return {"message": "Vambe backend is running", "secret": digest}
+    return {"message": "Vambe backend is running"}
 
 
 def run() -> None:
@@ -42,7 +41,6 @@ def run() -> None:
     import uvicorn
 
     uvicorn.run("api.main:app", host="0.0.0.0", port=8000, reload=True)
-    print(f"S:{settings}")
 
 if __name__ == "__main__":
     run()

@@ -12,7 +12,7 @@ Requires-Dist: pydantic>=2.8.0
 Requires-Dist: pydantic-settings>=2.3.0
 Requires-Dist: aiosqlite>=0.20.0
 Requires-Dist: python-multipart>=0.0.9
-Requires-Dist: google-generativeai>=0.2.0
+Requires-Dist: google-genai>=1.50.1
 Provides-Extra: dev
 Requires-Dist: pytest>=8.3.0; extra == "dev"
 Requires-Dist: httpx>=0.27.0; extra == "dev"
@@ -31,7 +31,7 @@ api-dev  # levanta uvicorn en localhost:8000
 ## Variables de entorno
 
 - `APP_SECRET`: usado para firmar o validar metadatos.
-- `GOOGLE_API_KEY`: clave para invocar los modelos Gemini y generar las clasificaciones automáticas.
+- `GOOGLE_API_KEY`: clave para llamar al modelo Gemini y generar las clasificaciones automáticas.
 - `FRONTEND_ORIGIN`: dominio permitido para CORS (por defecto `http://localhost:5173`).
 
 ## API principal

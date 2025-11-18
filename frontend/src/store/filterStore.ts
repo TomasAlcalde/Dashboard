@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 
 export type FilterSlice = {
-  dateRange: '7d' | '30d' | '90d';
+  dateRange: 'all' | '7d' | '30d' | '90d';
   seller: string;
   segment: string;
   setDateRange: (value: FilterSlice['dateRange']) => void;

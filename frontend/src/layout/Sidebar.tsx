@@ -29,7 +29,7 @@ const Sidebar = ({ open, openWidth, closedWidth }: SidebarProps) => {
       component="aside"
       sx={{
         width: open ? openWidth : closedWidth,
-        height: "80vh",
+        height: "90vh",
         position: "fixed",
         left: 0,
         top: 0,
@@ -103,6 +103,7 @@ const Sidebar = ({ open, openWidth, closedWidth }: SidebarProps) => {
         sx={{
           borderTop: "1px solid",
           borderColor: "divider",
+          mt: "auto",
         }}
       >
         <Stack direction="row" spacing={2} alignItems="center">

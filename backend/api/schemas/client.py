@@ -3,6 +3,7 @@ from __future__ import annotations
 from pydantic import BaseModel, Field
 
 from .transcript import TranscriptRead
+from .common import PaginationParams
 
 
 class ClientBase(BaseModel):
@@ -29,3 +30,13 @@ class ClientRead(BaseModel):
 class ClientListResponse(BaseModel):
     total: int
     items: list[ClientRead]
+
+
+class ClientFilters(PaginationParams):
+    seller: str | None = Field(
+        default=None, description="Filter clients by assigned seller (latest transcript)"
+    )
+    date_range: str | None = Field(
+        default=None,
+        description="Relative date range for latest transcript (supports 'all', '7d', '30d', '90d')",
+    )

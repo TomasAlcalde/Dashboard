@@ -1,10 +1,15 @@
 from __future__ import annotations
 
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
 from ..models.database import get_db
-from ..schemas.client import ClientCreate, ClientListResponse, ClientRead
+from ..schemas.client import (
+    ClientCreate,
+    ClientFilters,
+    ClientListResponse,
+    ClientRead,
+)
 from ..services.clients import get_client, list_clients, upsert_client
 
 router = APIRouter(prefix="/clients", tags=["clients"])
@@ -12,12 +17,11 @@ router = APIRouter(prefix="/clients", tags=["clients"])
 
 @router.get("/", response_model=ClientListResponse)
 def read_clients(
-    skip: int = Query(0, ge=0),
-    limit: int = Query(50, ge=1, le=200),
+    filters: ClientFilters = Depends(),
     db: Session = Depends(get_db),
 ) -> ClientListResponse:
-    items, total = list_clients(db, skip=skip, limit=limit)
-    items=[ClientRead.model_validate(c, from_attributes=True) for c in items]
+    items, total = list_clients(db, filters=filters)
+    items = [ClientRead.model_validate(c, from_attributes=True) for c in items]
     return ClientListResponse(total=total, items=items)
 
 

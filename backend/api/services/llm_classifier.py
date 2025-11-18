@@ -6,9 +6,11 @@ import time
 from .genai_client import client
 
 from ..schemas.classification import ClassificationBase
+from ..models.database import SessionLocal
+from .metrics import list_pains
 
 SYSTEM_PROMPT = (
-    """Eres un analista experto en ventas B2B. Recibirás el transcrito de una reunión comercial y deberás evaluar al cliente usando criterios cuantitativos y cualitativos. Tu salida debe ser un JSON estricto y válido. Si no hay información suficiente en el transcrito, devuelve null o [] según corresponda.
+    """Eres un analista experto en ventas B2B. Recibirás el transcrito de una reunión comercial y deberás evaluar al cliente usando criterios cuantitativos y cualitativos. Tu salida debe ser un JSON estricto y válido. Si no hay información suficiente en el transcrito, devuelve null o [] según corresponda en los campos donde se permita.
 
         Tus evaluaciones deben ser consistentes y seguir estas reglas:
         - Usa escalas y categorías definidas.
@@ -31,12 +33,11 @@ USER_PROMPT = (
                 "urgency": integer (0 a 3),
                 "budget_tier": "Low" | "Medium" | "High" | null,
                 "buyer_role": "Decisor" | "Influenciador" | "Usuario" | null,
-                "use_case": string | null,
-                "pains": [strings],
-                "objections": [strings],
-                "competitors": [strings],
-                "risks": [strings],
-                "next_step_clarity": integer (0 a 3),
+                "use_case": "Venta productos" | "Servicios" | "Tecnología" | "Alimentos" | "Salud" | "Finanzas, administración y asesorías"
+                "pains": [strings] | [],
+                "objections": [strings] | [],
+                "risks": [strings] | ,
+                "next_step_clarity": integer (0 o 1),
                 "fit_score": float (0 a 1),
                 "close_probability": float (0 a 1),
                 "summary": string
@@ -45,15 +46,29 @@ USER_PROMPT = (
                 Donde:
                 - "fit_score" evalúa cuán bien Vambe AI resuelve el problema del cliente.
                 - "close_probability" evalúa la probabilidad de cierre considerando todas las señales.
-                - "next_step_clarity" indica si quedó acción definida."""
+                - "next_step_clarity" indica si quedó acción o nueva reunión definida para seguir el proceso dentro de Vambe.
+                - "summary" debe ser breve, no más de 80 caracteres
+                - "pains" representa categorías de dolores encontrados. Debes elegir entre las categorías [{LISTA_AQUI}] y solo si quedan dolores sin listar crear una nueva categoría de máximo 4 palabras"""
 )
 
 MODEL_NAME = "gemini-2.5-flash-lite"
 
 
 def build_prompt(transcript: str) -> str:
-    parts = USER_PROMPT.split("{TRANSCRITO_AQUI}")
-    return f"{parts[0]}{transcript}{parts[1]}"
+    db = SessionLocal()
+    try:
+        pains_data = list_pains(db)
+    finally:
+        db.close()
+
+    pains_list = getattr(pains_data, "pains", []) or []
+    pains_text = ", ".join(pains_list) if pains_list else "Sin pains registrados"
+    print(pains_text)
+
+    before_transcript, remainder = USER_PROMPT.split("{TRANSCRITO_AQUI}")
+    before_list, after_list = remainder.split("{LISTA_AQUI}")
+
+    return f"{before_transcript}{transcript}{before_list}{pains_text}{after_list}"
 
 
 def _extract_text(response) -> str:
