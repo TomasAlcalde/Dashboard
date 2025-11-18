@@ -19,10 +19,23 @@ def _resolve_database_url() -> str:
     entregarse un URL de Postgres (Neon, Supabase, Railway, etc.).
     """
     if settings.database_url:
-        return settings.database_url
+        return _normalize_database_url(settings.database_url)
 
     DEFAULT_DB_PATH.parent.mkdir(parents=True, exist_ok=True)
     return f"sqlite:///{DEFAULT_DB_PATH.as_posix()}"
+
+
+def _normalize_database_url(url: str) -> str:
+    """Ensure Postgres URLs explicitly use the psycopg driver."""
+    if "://" not in url:
+        return url
+
+    scheme, rest = url.split("://", 1)
+    if scheme in {"postgres", "postgresql"}:
+        return f"postgresql+psycopg://{rest}"
+    if scheme.startswith("postgresql+") or scheme.startswith("postgres+"):
+        return url
+    return url
 
 
 DATABASE_URL = _resolve_database_url()
