@@ -10,10 +10,5 @@
       "src": "/(.*)",
       "dest": "api/main.py"
     }
-  ],
-  "env": {
-    "GOOGLE_API_KEY": "@google_api_key",
-    "APP_SECRET": "@app_secret",
-    "FRONTEND_ORIGIN": "@frontend_origin"
-  }
+  ]
 }
