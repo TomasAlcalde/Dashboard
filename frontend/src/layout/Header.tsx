@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import { Box, Button, IconButton, Stack, Typography } from "@mui/material";
 import {
   Menu as MenuIcon,
@@ -6,12 +7,39 @@ import {
   AddSharp,
 } from "@mui/icons-material";
 import VambeLogo from "../components/UI/VambeLogo";
+import { apiClient } from "../api/client";
 
 interface HeaderProps {
   onMenuClick: () => void;
 }
 
 const Header = ({ onMenuClick }: HeaderProps) => {
+  const [apiHealthy, setApiHealthy] = useState<boolean | null>(null);
+
+  useEffect(() => {
+    let isMounted = true;
+    const checkHealth = async () => {
+      try {
+        const response = await apiClient.get("/health");
+        if (!isMounted) return;
+        setApiHealthy(response.status === 200);
+      } catch (error) {
+        if (isMounted) {
+          setApiHealthy(false);
+        }
+      }
+    };
+    void checkHealth();
+    const interval = setInterval(() => {
+      void checkHealth();
+    }, 30000);
+
+    return () => {
+      isMounted = false;
+      clearInterval(interval);
+    };
+  }, []);
+
   return (
     <Box
       component="header"
@@ -60,6 +88,19 @@ const Header = ({ onMenuClick }: HeaderProps) => {
       </Stack>
 
       <Stack direction="row" spacing={1.5} alignItems="center">
+          <Box
+            sx={{
+              width: 10,
+              height: 10,
+              borderRadius: "50%",
+              backgroundColor:
+                apiHealthy === null
+                  ? "grey.400"
+                  : apiHealthy
+                  ? "success.main"
+                  : "warning.main",
+            }}
+          />
         <IconButton
           sx={{
             display: { xs: "none", md: "inline-flex" },

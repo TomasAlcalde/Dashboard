@@ -24,7 +24,7 @@ app.add_middleware(
     allow_headers=["*"]
 )
 
-app.include_router(health.router)
+app.include_router(health.router, prefix="/api")
 
 api_routers = (ingest.router, classify.router, clients.router, metrics.router, transcripts.router)
 for router in api_routers:
