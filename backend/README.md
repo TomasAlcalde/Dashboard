@@ -26,11 +26,18 @@ api-dev  # levanta uvicorn en localhost:8000
 | GET | `/api/clients/{id}` | Devuelve un cliente con su clasificacion ligada. |
 | GET | `/api/metrics/overview` | KPIs generales (clientes, oportunidades abiertas, etc.). |
 | GET | `/api/metrics/funnel` | Conteo por etapas (discovery, evaluation, negotiation, closed). |
+| GET | `/api/metrics/conversions` | Serie mensual de conversiones (feed para las tarjetas KPI y timeline). |
+| GET | `/api/metrics/pains` | Catálogo de pains históricos (se usa para contextualizar al LLM). |
+| GET | `/api/metrics/pains/distribution` | Conteo por dolor para el gráfico horizontal. |
+| GET | `/api/metrics/origins` | Distribución de orígenes reportados por el LLM. |
+| GET | `/api/metrics/seller-conversion` | Ranking de vendedores (cerrados/total y tasa). |
+| GET | `/api/metrics/sentiment-conversion` | Comparativa de sentiment vs casos cerrados/no cerrados. |
+| GET | `/api/metrics/automatization-outcomes` | Cruce entre automatización requerida y estado del caso. |
 
 ### Pipeline CSV -> SQLite
 1. Lee el archivo CSV (usa `data/vambe_clients.csv` como plantilla).
 2. Limpia y normaliza los datos (booleanos, fechas, transcripts).
-3. Invoca un placeholder LLM (`services.llm.llm_classify`) para obtener sentimiento, urgencia, etc.
+3. Invoca el LLM (`services.llm_classifier`) para obtener sentimiento, urgencia, origen, automatización, dolores, riesgos, fit score y probabilidad de cierre.
 4. Inserta/actualiza clientes en SQLite y almacena la clasificacion en la tabla `classifications`.
 
 ## Tests
@@ -38,8 +45,3 @@ api-dev  # levanta uvicorn en localhost:8000
 ```bash
 pytest
 ```
-
-## Deploy en Vercel
-
-- Archivo `vercel.json` ya configurado para usar `@vercel/python` con FastAPI.
-- Asigna las variables `GOOGLE_API_KEY`, `APP_SECRET` y `FRONTEND_ORIGIN` desde la UI de Vercel (los valores se inyectan automáticamente en tiempo de ejecución).

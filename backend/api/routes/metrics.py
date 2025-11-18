@@ -5,20 +5,28 @@ from sqlalchemy.orm import Session
 
 from ..models.database import get_db
 from ..schemas.metrics import (
-    AvailableObjections,
     AvailablePains,
+    AutomatizationOutcomeSeries,
     ConversionMetrics,
     MetricsFunnel,
     MetricsOverview,
+    OriginDistribution,
+    PainDistribution,
+    SellerConversionResponse,
+    SentimentConversionSeries,
     UrgencyBudgetHeatmap,
     UseCaseDistribution,
 )
 from ..services.metrics import (
+    automatization_outcomes,
     conversion_metrics,
     funnel,
-    list_objections,
     list_pains,
+    origin_distribution,
+    pain_distribution,
+    seller_conversion_stats,
     overview,
+    sentiment_conversion_breakdown,
     urgency_budget_heatmap,
     use_case_distribution,
 )
@@ -59,6 +67,30 @@ def metrics_pains(db: Session = Depends(get_db)) -> AvailablePains:
     return list_pains(db)
 
 
-@router.get("/objections", response_model=AvailableObjections)
-def metrics_objections(db: Session = Depends(get_db)) -> AvailableObjections:
-    return list_objections(db)
+@router.get("/pains/distribution", response_model=PainDistribution)
+def metrics_pain_distribution(db: Session = Depends(get_db)) -> PainDistribution:
+    return pain_distribution(db)
+
+
+@router.get("/sentiment-conversion", response_model=SentimentConversionSeries)
+def metrics_sentiment_conversion(
+    db: Session = Depends(get_db),
+) -> SentimentConversionSeries:
+    return sentiment_conversion_breakdown(db)
+
+
+@router.get("/seller-conversion", response_model=SellerConversionResponse)
+def metrics_seller_conversion(db: Session = Depends(get_db)) -> SellerConversionResponse:
+    return seller_conversion_stats(db)
+
+
+@router.get("/origins", response_model=OriginDistribution)
+def metrics_origins(db: Session = Depends(get_db)) -> OriginDistribution:
+    return origin_distribution(db)
+
+
+@router.get("/automatization-outcomes", response_model=AutomatizationOutcomeSeries)
+def metrics_automatization_outcomes(
+    db: Session = Depends(get_db),
+) -> AutomatizationOutcomeSeries:
+    return automatization_outcomes(db)

@@ -1,3 +1,3 @@
-from . import classify, clients, dashboard, health, ingest, metrics, transcripts
+from . import classify, clients, health, ingest, metrics, transcripts
 
-__all__ = ["dashboard", "health", "ingest", "classify", "clients", "metrics", "transcripts"]
+__all__ = ["health", "ingest", "classify", "clients", "metrics", "transcripts"]

@@ -4,7 +4,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from .models.database import init_db
-from .routes import classify, clients, dashboard, health, ingest, metrics, transcripts
+from .routes import classify, clients, health, ingest, metrics, transcripts
 
 from .settings import settings
 
@@ -26,7 +26,7 @@ app.add_middleware(
 
 app.include_router(health.router)
 
-api_routers = (dashboard.router, ingest.router, classify.router, clients.router, metrics.router, transcripts.router)
+api_routers = (ingest.router, classify.router, clients.router, metrics.router, transcripts.router)
 for router in api_routers:
     app.include_router(router, prefix="/api")
 

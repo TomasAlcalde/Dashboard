@@ -19,7 +19,7 @@ class Base(DeclarativeBase):
 
 
 def init_db() -> None:
-    from . import classification, client, task, transcript
+    from . import classification, client, transcript
 
     Base.metadata.create_all(bind=engine)
 

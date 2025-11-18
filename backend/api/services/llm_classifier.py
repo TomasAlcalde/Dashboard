@@ -15,7 +15,8 @@ SYSTEM_PROMPT = (
         Tus evaluaciones deben ser consistentes y seguir estas reglas:
         - Usa escalas y categorías definidas.
         - No inventes información no presente en el texto.
-        - Sé conservador al asignar probabilidades."""
+        - Sé conservador al asignar probabilidades de "fit_score y "close_probability".
+        - Sé crítico al determinar el "sentiment", el "origin" del lead y si requiere "automatization"."""
 )
 
 USER_PROMPT = (
@@ -35,9 +36,9 @@ USER_PROMPT = (
                 "buyer_role": "Decisor" | "Influenciador" | "Usuario" | null,
                 "use_case": "Venta productos" | "Servicios" | "Tecnología" | "Alimentos" | "Salud" | "Finanzas, administración y asesorías"
                 "pains": [strings] | [],
-                "objections": [strings] | [],
                 "risks": [strings] | ,
-                "next_step_clarity": integer (0 o 1),
+                "origin": "Eventos" | "Conocidos" | "Web" | "Contacto directo" | null
+                "automatization": boolean,
                 "fit_score": float (0 a 1),
                 "close_probability": float (0 a 1),
                 "summary": string
@@ -46,9 +47,10 @@ USER_PROMPT = (
                 Donde:
                 - "fit_score" evalúa cuán bien Vambe AI resuelve el problema del cliente.
                 - "close_probability" evalúa la probabilidad de cierre considerando todas las señales.
-                - "next_step_clarity" indica si quedó acción o nueva reunión definida para seguir el proceso dentro de Vambe.
+                - "origin" representa la fuente de como el cliente conoció a Vambe.
+                - "automatization" debe ser true cuando el cliente menciona explicitamente que requiere automatizar flujos de trabajo, y false en caso contrario.
                 - "summary" debe ser breve, no más de 80 caracteres
-                - "pains" representa categorías de dolores encontrados. Debes elegir entre las categorías [{LISTA_AQUI}] y solo si quedan dolores sin listar crear una nueva categoría de máximo 4 palabras"""
+                - "pains" representa categorías de dolores encontrados. Debes elegir entre las categorías [{LISTA_DOLORES_AQUI}] y solo si quedan dolores sin listar crear una nueva categoría de máximo 4 palabras."""
 )
 
 MODEL_NAME = "gemini-2.5-flash-lite"
@@ -63,12 +65,10 @@ def build_prompt(transcript: str) -> str:
 
     pains_list = getattr(pains_data, "pains", []) or []
     pains_text = ", ".join(pains_list) if pains_list else "Sin pains registrados"
-    print(pains_text)
 
-    before_transcript, remainder = USER_PROMPT.split("{TRANSCRITO_AQUI}")
-    before_list, after_list = remainder.split("{LISTA_AQUI}")
-
-    return f"{before_transcript}{transcript}{before_list}{pains_text}{after_list}"
+    prompt = USER_PROMPT.replace("{TRANSCRITO_AQUI}", transcript)
+    prompt = prompt.replace("{LISTA_DOLORES_AQUI}", pains_text)
+    return prompt
 
 
 def _extract_text(response) -> str:

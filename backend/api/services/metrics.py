@@ -9,12 +9,21 @@ from ..models.classification import Classification
 from ..models.client import Client
 from ..models.transcript import Transcript
 from ..schemas.metrics import (
-    AvailableObjections,
     AvailablePains,
+    AutomatizationOutcome,
+    AutomatizationOutcomeSeries,
     ConversionMetrics,
     MetricsFunnel,
     MetricsOverview,
     MonthlyConversion,
+    OriginDistribution,
+    OriginStat,
+    PainDistribution,
+    PainStat,
+    SellerConversionResponse,
+    SellerConversionStat,
+    SentimentConversion,
+    SentimentConversionSeries,
     UrgencyBudgetCell,
     UrgencyBudgetHeatmap,
     UseCaseDistribution,
@@ -156,6 +165,143 @@ def use_case_distribution(db: Session, status: str = "all") -> UseCaseDistributi
     return UseCaseDistribution(items=items)
 
 
+def pain_distribution(db: Session) -> PainDistribution:
+    rows = db.execute(select(Classification.pains)).scalars().all()
+    counter: dict[str, int] = defaultdict(int)
+
+    for pains in rows:
+        if not pains:
+            continue
+        for pain in pains:
+            label = (pain or "").strip()
+            if label:
+                counter[label] += 1
+
+    items = [
+        PainStat(pain=label, total=value)
+        for label, value in sorted(counter.items(), key=lambda item: item[1], reverse=True)
+    ]
+    return PainDistribution(items=items)
+
+
+def sentiment_conversion_breakdown(db: Session) -> SentimentConversionSeries:
+    rows = (
+        db.execute(
+            select(
+                Classification.sentiment,
+                Transcript.closed,
+                func.count(Transcript.id).label("total"),
+            )
+            .join(Transcript, Transcript.id == Classification.transcript_id)
+            .group_by(Classification.sentiment, Transcript.closed)
+        )
+        .all()
+    )
+
+    stats: dict[int, dict[str, int]] = defaultdict(lambda: {"closed": 0, "open": 0})
+    for sentiment, closed, total in rows:
+        sentiment_value = int(sentiment or 0)
+        entry = stats[sentiment_value]
+        if closed:
+            entry["closed"] += int(total or 0)
+        else:
+            entry["open"] += int(total or 0)
+
+    items = [
+        SentimentConversion(
+            sentiment=sentiment,
+            closed=value["closed"],
+            open=value["open"],
+        )
+        for sentiment, value in sorted(stats.items())
+    ]
+    return SentimentConversionSeries(items=items)
+
+
+def seller_conversion_stats(db: Session) -> SellerConversionResponse:
+    closed_case = func.sum(
+        case((Transcript.closed.is_(True), 1), else_=0)
+    ).label("closed_count")
+
+    rows = (
+        db.execute(
+            select(
+                Transcript.assigned_seller,
+                func.count(Transcript.id).label("total"),
+                closed_case,
+            ).group_by(Transcript.assigned_seller)
+        )
+        .all()
+    )
+
+    items: list[SellerConversionStat] = []
+    for seller, total, closed in rows:
+        total_value = int(total or 0)
+        closed_value = int(closed or 0)
+        conversion = closed_value / total_value if total_value else 0.0
+        items.append(
+            SellerConversionStat(
+                seller=seller or "Sin asignar",
+                closed=closed_value,
+                total=total_value,
+                conversion=conversion,
+            )
+        )
+
+    items.sort(key=lambda item: item.conversion, reverse=True)
+    return SellerConversionResponse(items=items)
+
+
+def origin_distribution(db: Session) -> OriginDistribution:
+    rows = (
+        db.execute(
+            select(Classification.origin, func.count(Classification.id).label("total"))
+            .group_by(Classification.origin)
+        ).all()
+    )
+
+    items = [
+        OriginStat(origin=origin or "Unknown", total=int(total or 0))
+        for origin, total in rows
+    ]
+    items.sort(key=lambda item: item.total, reverse=True)
+    return OriginDistribution(items=items)
+
+
+def automatization_outcomes(db: Session) -> AutomatizationOutcomeSeries:
+    rows = (
+        db.execute(
+            select(
+                Classification.automatization,
+                Transcript.closed,
+                func.count(Transcript.id).label("total"),
+            )
+            .join(Transcript, Transcript.id == Classification.transcript_id)
+            .group_by(Classification.automatization, Transcript.closed)
+        )
+        .all()
+    )
+
+    stats: dict[bool, dict[str, int]] = defaultdict(lambda: {"closed": 0, "open": 0})
+    for automatization, closed, total in rows:
+        key = bool(automatization)
+        entry = stats[key]
+        if closed:
+            entry["closed"] += int(total or 0)
+        else:
+            entry["open"] += int(total or 0)
+
+    items = [
+        AutomatizationOutcome(
+            automatization=state,
+            closed=values["closed"],
+            open=values["open"],
+        )
+        for state, values in sorted(stats.items(), key=lambda item: item[0], reverse=True)
+    ]
+    return AutomatizationOutcomeSeries(items=items)
+
+
 def list_pains(db: Session) -> AvailablePains:
     rows = db.execute(select(Classification.pains)).scalars().all()
     pains_set: set[str] = set()
@@ -166,15 +312,3 @@ def list_pains(db: Session) -> AvailablePains:
             if pain:
                 pains_set.add(pain)
     return AvailablePains(pains=sorted(pains_set))
-
-
-def list_objections(db: Session) -> AvailableObjections:
-    rows = db.execute(select(Classification.objections)).scalars().all()
-    objections_set: set[str] = set()
-    for row in rows:
-        if not row:
-            continue
-        for objection in row:
-            if objection:
-                objections_set.add(objection)
-    return AvailableObjections(objections=sorted(objections_set))
