@@ -1,4 +1,5 @@
 import { Paper, Skeleton, Stack, Typography } from "@mui/material";
+import { useTheme } from "@mui/material/styles";
 import {
   CartesianGrid,
   Line,
@@ -25,10 +26,11 @@ const formatMonthLabel = (value: string) => {
 
 const MonthlyConversionTrend = () => {
   const { data, isLoading } = useConversionMetrics();
+  const theme = useTheme();
 
   if (isLoading) {
     return (
-      <Paper sx={{ p: 3, borderRadius: 3, height: 320 }}>
+      <Paper sx={{ p: 3, borderRadius: 3, height: 390 }}>
         <Typography variant="subtitle1" fontWeight={600} mb={2}>
           Conversión mensual
         </Typography>
@@ -48,10 +50,12 @@ const MonthlyConversionTrend = () => {
   }));
 
   return (
-    <Paper sx={{ p: 3, borderRadius: 3, height: 320 }}>
-      <Typography variant="subtitle1" fontWeight={600} mb={2}>
-        Conversión mensual
-      </Typography>
+    <Paper sx={{ p: 3, borderRadius: 3, height: 340, pb: 8 }}>
+      <Stack spacing={1} mb={2}>
+        <Typography variant="h4" fontWeight={700}>
+          Conversión mensual
+        </Typography>
+      </Stack>
       {chartData.length === 0 ? (
         <Stack
           height={220}
@@ -62,16 +66,16 @@ const MonthlyConversionTrend = () => {
           <Typography variant="body2">Sin datos para mostrar.</Typography>
         </Stack>
       ) : (
-        <ResponsiveContainer width="100%" height="100%">
-          <LineChart data={chartData}>
-            <CartesianGrid strokeDasharray="3 3" />
-            <XAxis dataKey="label" />
-            <YAxis tickFormatter={(value) => formatPercent(value)} />
-            <Tooltip formatter={(value: number) => formatPercent(value)} />
-            <Line
-              type="monotone"
+          <ResponsiveContainer width="100%" height="100%">
+            <LineChart data={chartData}>
+              <CartesianGrid stroke={theme.palette.divider} strokeWidth={0.5} />
+              <XAxis dataKey="label" />
+              <YAxis tickFormatter={(value) => formatPercent(value)} />
+              <Tooltip formatter={(value: number) => formatPercent(value)} />
+              <Line
+                type="monotone"
               dataKey="conversion"
-              stroke="#2563EB"
+              stroke={theme.palette.secondary.main}
               strokeWidth={3}
               dot={{ strokeWidth: 2 }}
               activeDot={{ r: 6 }}

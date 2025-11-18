@@ -53,22 +53,15 @@ Respuesta esperada:
 
 El frontend expone dos vistas principales:
 
-- **Metrics**: tarjetas KPI (conversion rate, sentimiento promedio, probabilidad media de cierre), grafico de objeciones, heatmap de urgencia vs presupuesto y tendencias de conversion.
-- **Clients**: DataGrid con filtros (fecha, seller, segmento), drawer lateral con detalle de clasificacion (sentiment, urgency, fit score, probabilidad de cierre) y transcript.
+- **Metrics**: tarjetas KPI, distribución de casos por industria, ranking de vendedores, gráfico de automatización vs estado, distribución de dolores/orígenes y timeline de conversión. Se alimentan de React Query.
+- **Clients**: DataGrid con filtros (fecha, seller) y chips de estado. Al seleccionar un registro se abre un drawer lateral con la clasificación completa (sentiment, urgency, fit score, close probability, origen, automatización, riesgos, dolores) y el transcript asociado.
 
-Estas vistas consumen los endpoints `/api/metrics/*` y `/api/clients` a traves de React Query, actualizando los componentes creados (`KpiCards`, `ObjectionsChart`, `UrgencyBudgetHeatmap`, `CompetitorsWinRate`, `ConversionTimeline`).
+Estas vistas consumen los endpoints `/api/metrics/*` y `/api/clients` a traves de React Query, actualizando los componentes creados (`KpiCards`, `MonthlyConversionTrend`, `UseCaseDistribution`, `SellerConversionList`, `PainDistribution`, `AutomatizationOutcomeChart`, `OriginDistributionList`).
 
-## Deploy en Vercel
+## Documentación
 
-- **Frontend (`/frontend`)**: `vercel.json` ejecuta `npm run build` y publica `dist/`. Define `VITE_API_BASE_URL` apuntando al backend.
-- **Backend (`/backend`)**: `vercel.json` usa `@vercel/python` para levantar FastAPI sobre `api/main.py`. Configura las variables `GOOGLE_API_KEY`, `APP_SECRET` y `FRONTEND_ORIGIN`.
-- **CORS**: la API solo acepta el origen definido en `FRONTEND_ORIGIN`, por lo que en produccion debe coincidir con la URL del frontend desplegado.
-
-## Proximas Mejoras
-
-1. **Busqueda semantica** en transcripts para encontrar conversaciones similares y alimentar el panel con insights relevantes.
-2. **Exportacion** de clientes y metricas a CSV/Sheets con filtros aplicados.
-3. **Active learning** que permita re-entrenar el clasificador a partir de feedback de los sellers (aceptar/rechazar etiquetas).
+- [Arquitectura y decisiones clave](ARCHITECTURE.md)
+- `backend/README.md` y `frontend/README.md` profundizan en cada paquete.
 
 ## Pruebas
 

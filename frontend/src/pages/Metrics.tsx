@@ -1,13 +1,14 @@
-import ConversionTimeline from "../components/dashboard/ConversionTimeline";
 import {
   MonthlyConversionKpi,
   TotalConversionKpi,
 } from "../components/dashboard/KpiCards";
+import AutomatizationOutcomeChart from "../components/dashboard/AutomatizationOutcomeChart";
 import MonthlyConversionTrend from "../components/dashboard/MonthlyConversionTrend";
-import ObjectionsChart from "../components/dashboard/ObjectionsChart";
-import UrgencyBudgetHeatmap from "../components/dashboard/UrgencyBudgetHeatmap";
+import OriginDistributionList from "../components/dashboard/OriginDistributionList";
+import SellerConversionList from "../components/dashboard/SellerConversionList";
 import UseCaseDistribution from "../components/dashboard/UseCaseDistribution";
 import DashboardLayout from "../layout/DashboardLayout";
+import PainDistribution from "../components/dashboard/PainDistribution";
 
 const MetricsPage = () => (
   <DashboardLayout>
@@ -15,9 +16,10 @@ const MetricsPage = () => (
     <MonthlyConversionKpi />
     <UseCaseDistribution />
     <MonthlyConversionTrend />
-    <ObjectionsChart />
-    <UrgencyBudgetHeatmap />
-    <ConversionTimeline />
+    <PainDistribution />
+    <SellerConversionList />
+    <AutomatizationOutcomeChart />
+    <OriginDistributionList />
   </DashboardLayout>
 );
 

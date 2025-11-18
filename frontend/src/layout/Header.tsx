@@ -3,9 +3,9 @@ import {
   Menu as MenuIcon,
   NotificationsNoneOutlined,
   Search,
+  AddSharp,
 } from "@mui/icons-material";
 import VambeLogo from "../components/UI/VambeLogo";
-import VambeLogoSmall from "../components/UI/VambeLogoSmall";
 
 interface HeaderProps {
   onMenuClick: () => void;
@@ -35,8 +35,8 @@ const Header = ({ onMenuClick }: HeaderProps) => {
     >
       <Stack direction="row" spacing={2} alignItems="center">
         <Box className="hidden md:block w-56">
-            <VambeLogo className="h-10" />
-          </Box>
+          <VambeLogo className="h-10" />
+        </Box>
         <IconButton
           onClick={onMenuClick}
           className="hover:text-primary"
@@ -82,9 +82,16 @@ const Header = ({ onMenuClick }: HeaderProps) => {
         <Button
           variant="contained"
           size="small"
-          sx={{ display: { xs: "none", sm: "inline-flex" } }}
+          sx={{
+            minWidth: 40,
+            width: 40,
+            height: 40,
+            p: 0,
+            borderRadius: 2,
+            display: { xs: "none", sm: "inline-flex" },
+          }}
         >
-          New Report
+          <AddSharp />
         </Button>
       </Stack>
     </Box>

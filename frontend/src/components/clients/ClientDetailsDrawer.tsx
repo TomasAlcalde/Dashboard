@@ -1,6 +1,14 @@
 import type { ReactNode } from "react";
 
-import { Chip, Divider, Drawer, Stack, Typography } from "@mui/material";
+import {
+  Box,
+  Chip,
+  Divider,
+  Drawer,
+  Stack,
+  Typography,
+} from "@mui/material";
+import { useTheme } from "@mui/material/styles";
 
 import type { ClientRecord } from "../../api/clients";
 import { getLatestTranscript } from "./utils";
@@ -14,29 +22,42 @@ const ClientDetailsDrawer = ({
   client,
   onClose,
 }: ClientDetailsDrawerProps) => {
+  const theme = useTheme();
   const latestTranscript = client ? getLatestTranscript(client) : null;
+  const classification = latestTranscript?.classification;
+
+  const formatPercent = (value?: number | null) => {
+    if (typeof value !== "number") {
+      return "-";
+    }
+    return `${(value * 100).toFixed(1).replace(/\.0$/, "")}%`;
+  };
 
   return (
     <Drawer
       anchor="right"
       open={Boolean(client)}
       onClose={onClose}
-      PaperProps={{ sx: { width: { xs: 320, md: 420 } } }}
+      PaperProps={{
+        sx: {
+          width: { xs: 360, md: 460 },
+          bgcolor: theme.palette.common.white,
+        },
+      }}
     >
       {client ? (
-        <Stack spacing={2} sx={{ p: 3 }}>
-          <Typography variant="h6" fontWeight={600}>
-            {client.name}
-          </Typography>
-
-          {latestTranscript ? (
+        <Stack spacing={3} sx={{ p: 3 }}>
+          <Stack spacing={1}>
+            <Typography variant="h4" fontWeight={700}>
+              {client.name}
+            </Typography>
             <Stack direction="row" spacing={1} alignItems="center">
               <Chip
-                label={latestTranscript.closed ? "Closed" : "Open"}
-                color={latestTranscript.closed ? "success" : "warning"}
+                label={latestTranscript?.closed ? "Cerrado" : "Abierto"}
+                color={latestTranscript?.closed ? "success" : "warning"}
                 size="small"
               />
-              {latestTranscript.assigned_seller ? (
+              {latestTranscript?.assigned_seller ? (
                 <Chip
                   label={latestTranscript.assigned_seller}
                   size="small"
@@ -44,62 +65,57 @@ const ClientDetailsDrawer = ({
                 />
               ) : null}
             </Stack>
-          ) : null}
+          </Stack>
 
-          <Divider flexItem />
-
-          <DetailSection title="Clasificacion">
-            {latestTranscript?.classification ? (
-              <Stack spacing={1}>
-                <InfoRow
-                  label="Sentiment"
-                  value={latestTranscript.classification.sentiment}
-                />
-                <InfoRow
-                  label="Urgency"
-                  value={latestTranscript.classification.urgency}
-                />
+          <Box>
+            <Typography variant="subtitle1" fontWeight={600} gutterBottom>
+              Clasificación
+            </Typography>
+            {classification ? (
+              <Stack spacing={1.5} px={1} py={2} borderRadius={2} bgcolor="background.paper">
+                <InfoRow label="Sentiment" value={String(classification.sentiment)} />
+                <InfoRow label="Urgencia" value={String(classification.urgency)} />
                 <InfoRow
                   label="Use case"
-                  value={latestTranscript.classification.use_case}
+                  value={classification.use_case ?? "Sin definir"}
+                />
+                <InfoRow label="Origen" value={classification.origin} />
+                <InfoRow
+                  label="Automatización"
+                  value={classification.automatization ? "Sí" : "No"}
                 />
                 <InfoRow
                   label="Fit score"
-                  value={`${latestTranscript.classification.fit_score * 100}%`}
+                  value={formatPercent(classification.fit_score)}
                 />
                 <InfoRow
                   label="Prob. cierre"
-                  value={`${
-                    latestTranscript.classification.close_probability * 100
-                  }%`}
+                  value={formatPercent(classification.close_probability)}
                 />
-                {latestTranscript.classification.objections ? (
-                  <InfoRow
-                    label="Objeciones"
-                    value={latestTranscript.classification.objections}
-                  />
+                {classification.risks?.length ? (
+                  <InfoRow label="Riesgos" value={classification.risks.join(" · ")} />
                 ) : null}
-                {latestTranscript.classification.competitors ? (
-                  <InfoRow
-                    label="Competidores"
-                    value={latestTranscript.classification.competitors}
-                  />
+                {classification.pains?.length ? (
+                  <InfoRow label="Dolores" value={classification.pains.join(" · ")} />
                 ) : null}
               </Stack>
             ) : (
-              <Typography variant="body2">
-                Sin clasificacion cargada aun.
+              <Typography variant="body2" color="text.secondary">
+                Sin clasificación registrada.
               </Typography>
             )}
-          </DetailSection>
+          </Box>
 
           <Divider flexItem />
 
-          <DetailSection title="Transcript">
-            <Typography variant="body2" color="text.primary">
-              {latestTranscript?.transcript ?? "Sin transcript."}
+          <Box>
+            <Typography variant="subtitle1" fontWeight={600} gutterBottom>
+              Transcript
             </Typography>
-          </DetailSection>
+            <Typography variant="body2" color="text.secondary">
+              {latestTranscript?.transcript ?? "Sin transcript cargado."}
+            </Typography>
+          </Box>
         </Stack>
       ) : null}
     </Drawer>

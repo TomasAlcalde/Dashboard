@@ -13,6 +13,7 @@ const layoutSlots = [
   { key: "slot-5", area: "slot5" },
   { key: "slot-6", area: "slot6" },
   { key: "slot-7", area: "slot7" },
+  { key: "slot-8", area: "slot8" },
 ];
 
 export function DashboardLayout({ children }: DashboardLayoutProps) {
@@ -22,14 +23,14 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
     <Box
       sx={{
         display: "grid",
-        gap: 2,
+        gap: 4,
         gridTemplateColumns: { xs: "1fr", md: "repeat(3, 1fr)" },
         gridTemplateAreas: {
-          xs: `"slot1" "slot2" "slot3" "slot4" "slot5" "slot6" "slot7"`,
+          xs: `"slot1" "slot2" "slot3" "slot4" "slot5" "slot6" "slot7" "slot8"`,
           md: `"slot1 slot2 slot3"
                "slot4 slot4 slot3"
                "slot5 slot5 slot6"
-               "slot7 slot7 slot7"`,
+               "slot7 slot7 slot8"`,
         },
       }}
     >

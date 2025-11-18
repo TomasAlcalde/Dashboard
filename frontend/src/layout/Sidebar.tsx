@@ -107,13 +107,10 @@ const Sidebar = ({ open, openWidth, closedWidth }: SidebarProps) => {
         }}
       >
         <Stack direction="row" spacing={2} alignItems="center">
-          <Avatar sx={{ bgcolor: "primary.main" }}>VT</Avatar>
+          <Avatar sx={{ bgcolor: "primary.main" }}>TA</Avatar>
           {open && (
             <Box>
-              <Typography variant="subtitle2">Tom Lead</Typography>
-              <Typography variant="caption" color="text.secondary">
-                Sales Ops
-              </Typography>
+              <Typography variant="subtitle2">Tomás Alcalde</Typography>
             </Box>
           )}
         </Stack>

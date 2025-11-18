@@ -91,9 +91,33 @@ const columns: GridColDef<ClientRecord>[] = [
       const latest = getLatestTranscript(params.row);
       const isClosed = latest?.closed ?? false;
       if (isClosed) {
-        return <Chip label="Cerrado" color="success" />;
+        return (
+          <Chip
+            label="Cerrado"
+            size="small"
+            sx={{
+              bgcolor: "success.light",
+              color: "success.dark",
+              border: "1px solid",
+              borderColor: "success.dark",
+              fontWeight: 600,
+            }}
+          />
+        );
       }
-      return <Chip label="Abierto" color="warning" />;
+      return (
+        <Chip
+          label="Abierto"
+          size="small"
+          sx={{
+            bgcolor: "primary.light",
+            color: "primary.dark",
+            border: "1px solid",
+            borderColor: "primary.main",
+            fontWeight: 600,
+          }}
+        />
+      );
     },
   },
   {
@@ -113,7 +137,7 @@ const columns: GridColDef<ClientRecord>[] = [
 ];
 
 const ClientsTable = ({ rows, loading, onSelect }: ClientsTableProps) => (
-  <Box sx={{ height: { xs: 420, md: 520 }, width: "100%", overflow: "hidden" }}>
+  <Box sx={{ height: { xs: 450, md: 580 }, width: "100%", overflow: "hidden" }}>
     <DataGrid
       rows={rows}
       columns={columns}

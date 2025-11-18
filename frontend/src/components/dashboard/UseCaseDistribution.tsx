@@ -1,5 +1,4 @@
 import {
-  Box,
   Paper,
   Skeleton,
   Stack,
@@ -7,6 +6,7 @@ import {
   ToggleButtonGroup,
   Typography,
 } from "@mui/material";
+import { useTheme } from "@mui/material/styles";
 import {
   Bar,
   BarChart,
@@ -32,12 +32,15 @@ const FILTER_OPTIONS: { label: string; value: UseCaseStatus }[] = [
 const UseCaseDistribution = () => {
   const [status, setStatus] = useState<UseCaseStatus>("all");
   const { data, isLoading } = useUseCaseDistribution(status);
+  const theme = useTheme();
 
   const items = [...(data?.items ?? [])];
   const chartData = items.map((item) => ({
     use_case: item.use_case,
     total: item.total,
   }));
+
+  const totalCases = chartData.reduce((sum, entry) => sum + entry.total, 0);
 
   const handleFilterChange = (_event: unknown, value: UseCaseStatus | null) => {
     if (value) {
@@ -52,35 +55,52 @@ const UseCaseDistribution = () => {
       sx={{
         p: 3,
         borderRadius: 3,
-        height: { xs: 420, md: 660 },
+        height: { xs: 420, md: 585 },
         display: "flex",
         flexDirection: "column",
       }}
     >
-      <Stack
-        direction={{ xs: "column", sm: "row" }}
-        alignItems={{ xs: "flex-start", sm: "center" }}
-        justifyContent="space-between"
-        spacing={2}
-        mb={2}
-      >
-        <Typography variant="subtitle1" fontWeight={600}>
-          Casos de uso clasificados
+      <Stack spacing={1} mb={2}>
+        <Typography variant="h4" fontWeight={700}>
+          Casos por industria
         </Typography>
-        <ToggleButtonGroup
-          size="small"
-          exclusive
-          value={status}
-          onChange={handleFilterChange}
+        <Stack
+          direction={{ xs: "column", sm: "row" }}
+          justifyContent="space-between"
+          alignItems={{ xs: "flex-start", sm: "center" }}
+          spacing={2}
         >
-          {FILTER_OPTIONS.map((option) => (
-            <ToggleButton key={option.value} value={option.value}>
-              {option.label}
-            </ToggleButton>
-          ))}
-        </ToggleButtonGroup>
+          <Stack spacing={0.5}>
+            <Typography variant="caption" color="text.secondary">
+              {status === "all"
+                ? "Todos los casos"
+                : status === "closed"
+                ? "Casos cerrados"
+                : "Casos abiertos"}
+            </Typography>
+            <Typography variant="h3" fontWeight={700}>
+              {totalCases}
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              Total de oportunidades
+            </Typography>
+          </Stack>
+          <ToggleButtonGroup
+            size="small"
+            exclusive
+            value={status}
+            onChange={handleFilterChange}
+            color="primary"
+          >
+            {FILTER_OPTIONS.map((option) => (
+              <ToggleButton key={option.value} value={option.value}>
+                {option.label}
+              </ToggleButton>
+            ))}
+          </ToggleButtonGroup>
+        </Stack>
       </Stack>
-      <Box sx={{ flex: 1, minHeight: 0 }}>
+      <Stack sx={{ flex: 1, minHeight: 0 }}>
         {isLoading ? (
           <Skeleton
             variant="rounded"
@@ -103,25 +123,26 @@ const UseCaseDistribution = () => {
               layout="vertical"
               margin={{ left: 12, right: 24, top: 8, bottom: 8 }}
             >
-              <CartesianGrid strokeDasharray="3 3" horizontal={false} />
+              <CartesianGrid stroke={theme.palette.divider} strokeWidth={0.5} />
               <XAxis type="number" allowDecimals={false} />
               <YAxis
                 type="category"
                 dataKey="use_case"
-                width={140}
+                width={180}
                 tickLine={false}
+                axisLine={false}
               />
               <Tooltip />
               <Bar
                 dataKey="total"
-                fill="#14B8A6"
-                radius={[0, 6, 6, 0]}
-                barSize={20}
+                fill={theme.palette.secondary.main}
+                radius={[0, 12, 12, 0]}
+                barSize={22}
               />
             </BarChart>
           </ResponsiveContainer>
         )}
-      </Box>
+      </Stack>
     </Paper>
   );
 };
